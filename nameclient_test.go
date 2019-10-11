@@ -101,3 +101,33 @@ func nameInNames(name Name, names []Name) bool {
 	}
 	return false
 }
+
+func TestInvalidNameResponse(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	tests := []struct {
+		invalidResponse string
+		expErrContains  string
+	}{
+		{`{"invalid"`, "unexpected end of JSON input"},
+		{`{"invalid"`, "unable to unmarshal names API response"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expErrContains, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, err := fmt.Fprintf(w, tt.invalidResponse)
+				assert.Nil(err)
+			}))
+			defer ts.Close()
+
+			u, err := url.Parse(ts.URL)
+			assert.Nil(err)
+			nc := NewNameClient(*u)
+			_, err = nc.Names()
+			assert.Contains(err.Error(), tt.expErrContains)
+		})
+	}
+}

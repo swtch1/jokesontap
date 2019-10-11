@@ -2,6 +2,7 @@ package jokesontap
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -29,6 +30,8 @@ type NameClient struct {
 
 // NewNameClient creates a NameClient with default values where baseUrl is the API URL to query.
 func NewNameClient(baseUrl url.URL) *NameClient {
+	// TODO: the client values here _may_ be too detailed for the command line, but could be taken in thorough a more
+	// TODO: detailed config file or env vars
 	return &NameClient{
 		ApiUrl: baseUrl,
 		HttpClient: &http.Client{
@@ -51,20 +54,17 @@ func (c *NameClient) Names() ([]Name, error) {
 	req.Header.Set("Accept", "application/json")
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
-		log.WithError(err).Errorf("unable to get new name from '%s'", c.ApiUrl.String())
-		return []Name{}, err
+		return []Name{}, errors.Wrapf(err, "unable to get new name from '%s'", c.ApiUrl.String())
 	}
 	defer resp.Body.Close()
 
 	var names []Name
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.WithError(err).Error("unable to read names API response body")
-		return []Name{}, err
+		return []Name{}, errors.Wrapf(err, "unable to read names API response body")
 	}
 	if err := json.Unmarshal(body, &names); err != nil {
-		log.WithError(err).Error("unable to unmarshal names API response body")
-		return []Name{}, err
+		return []Name{}, errors.Wrap(err, "unable to unmarshal names API response body")
 	}
 	return names, nil
 }

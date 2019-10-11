@@ -23,6 +23,7 @@ var (
 	LogLevel            string
 	LogFormat           string
 	PrettyPrintJsonLogs bool
+	MaxIdleConnections  int
 )
 
 // Init performs setup for the application CLI commands and flags, setting application version as provided.
@@ -32,6 +33,8 @@ func Init(version string) {
 	cmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "l", "info", "Log level should be one of debug, info, warn, error, fatal.")
 	cmd.PersistentFlags().StringVar(&LogFormat, "log-format", "text", "Log format should be one of text, json.")
 	cmd.PersistentFlags().BoolVar(&PrettyPrintJsonLogs, "pretty-json", false, "If writing JSON logs, pretty print those logs.")
+
+	cmd.PersistentFlags().IntVar(&MaxIdleConnections, "max-idle-connections", 10)
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)

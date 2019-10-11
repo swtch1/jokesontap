@@ -35,6 +35,8 @@ type JokeClient struct {
 
 // NewJokeClient creates a JokeClient with default values where baseUrl is the API URL without any parameters.
 func NewJokeClient(baseUrl url.URL) *JokeClient {
+	// TODO: the client values here _may_ be too detailed for the command line, but could be taken in thorough a more
+	// TODO: detailed config file or env vars
 	return &JokeClient{
 		ApiUrl: baseUrl,
 		HttpClient: &http.Client{

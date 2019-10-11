@@ -74,7 +74,7 @@ func TestInvalidJokesResponse(t *testing.T) {
 		expErrContains  string
 	}{
 		{`{"invalid"`, "unexpected end of JSON input"},
-		{`{"invalid"`, "unable to unmarshal jokes"},
+		{`{"invalid"`, "unable to unmarshal jokes API response"},
 	}
 
 	for _, tt := range tests {
