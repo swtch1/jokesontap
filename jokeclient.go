@@ -31,8 +31,6 @@ type JokeClient struct {
 	ApiUrl url.URL
 	// HttpClient is a http client which can be reused across multiple requests.
 	HttpClient *http.Client
-	// test is set to true when the system is under test to change basic behavior
-	test bool
 }
 
 // NewJokeClient creates a JokeClient with default values where baseUrl is the API URL without any parameters.
@@ -50,25 +48,24 @@ func NewJokeClient(baseUrl url.URL) *JokeClient {
 	}
 }
 
+func (c *JokeClient) Joke() (string, error) {
+	return c.jokeFromUrl(c.ApiUrl.String())
+}
+
 // JokeWithCustomName gets a new joke using the first and last name passed in.
 func (c *JokeClient) JokeWithCustomName(fName, lName string) (string, error) {
-	var jokeUrl string
-	if c.test {
-		// params are tested separately so we don't need to add them here when under test
-		// we want to use the raw test server URL when testing
-		jokeUrl = c.ApiUrl.String()
-	} else {
-		jokeUrl = addNameParams(c.ApiUrl, fName, lName)
-	}
+	return c.jokeFromUrl(addNameParams(c.ApiUrl, fName, lName))
+}
 
-	req, err := http.NewRequest("GET", jokeUrl, nil)
+func (c JokeClient) jokeFromUrl(apiUrl string) (string, error) {
+	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to create new http request with URL '%s'", c.ApiUrl.String())
+		return "", errors.Wrapf(err, "unable to create new http request with URL '%s'", apiUrl)
 	}
 	req.Header.Set("Accept", "application/json")
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to get new joke from '%s'", c.ApiUrl.String())
+		return "", errors.Wrapf(err, "unable to get new joke from '%s'", apiUrl)
 	}
 	defer resp.Body.Close()
 

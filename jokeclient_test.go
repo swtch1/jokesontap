@@ -58,10 +58,39 @@ func TestGettingJokesFromJokesClient(t *testing.T) {
 
 			// setting testing explicitly here ensures we can avoid transforming the URL, maintaining the raw
 			// URL from the test server
-			jc.test = true
-			joke, err := jc.JokeWithCustomName("", "")
+			joke, err := jc.Joke()
 			assert.Nil(err)
 			assert.Equal(tt.joke, joke)
+		})
+	}
+}
+
+func TestInvalidJokesResponse(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	tests := []struct {
+		invalidResponse string
+		expErrContains  string
+	}{
+		{`{"invalid"`, "unexpected end of JSON input"},
+		{`{"invalid"`, "unable to unmarshal jokes"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expErrContains, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, err := fmt.Fprintf(w, tt.invalidResponse)
+				assert.Nil(err)
+			}))
+			defer ts.Close()
+
+			u, err := url.Parse(ts.URL)
+			assert.Nil(err)
+			jc := NewJokeClient(*u)
+			_, err = jc.JokeWithCustomName("john", "smith")
+			assert.Contains(err.Error(), tt.expErrContains)
 		})
 	}
 }
