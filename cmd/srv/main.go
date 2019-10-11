@@ -9,7 +9,7 @@ import (
 
 var (
 	// buildVersion is the application version and should be populated at build time by build ldflags
-	// the default message will be overwritten
+	// this default message should be overwritten
 	buildVersion string = "unset: please file an issue"
 )
 
