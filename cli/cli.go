@@ -25,7 +25,7 @@ var (
 	PrettyPrintJsonLogs bool
 )
 
-// Init performs setup for the application CLI commands and flags.
+// Init performs setup for the application CLI commands and flags, setting application version as provided.
 func Init(version string) {
 	cmd.PersistentFlags().BoolVar(&Version, "version", false, "Print the application version and exit.")
 	cmd.PersistentFlags().Int32VarP(&Port, "port", "p", 5000, "Port which the server will listen on.")
