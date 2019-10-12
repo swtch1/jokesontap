@@ -31,17 +31,18 @@ func init() {
 }
 
 func main() {
+	namesChan := make(chan jokesontap.Name, defaultNameChanSize)
 	namesUrl, err := url.Parse(defaultNamesUrl)
 	if err != nil {
 		log.WithError(err).Fatal("unable to parse default names URL, please submit an issue")
 	}
-
-	names, err := nc.Names()
+	nameClient := jokesontap.NewNameClient(*namesUrl)
+	names, err := nameClient.Names()
 	if err != nil {
-		panic(err)
+		log.WithError(err).Error("ahhhh") // FIXME: testing
 	}
-	for _, name := range names {
-		fmt.Println(name.Name)
+	for _, n := range names {
+		namesChan <- n
 	}
 
 	jokesUrl, err := url.Parse(defaultJokesUrl)
@@ -53,7 +54,7 @@ func main() {
 	go HandleInterrupt()
 	srv := &jokesontap.Server{
 		Port:       cli.Port,
-		Names:      make(chan jokesontap.Name, defaultNameChanSize),
+		Names:      namesChan,
 		JokeClient: jokeClient,
 	}
 	log.Fatal(srv.ListenAndServe())

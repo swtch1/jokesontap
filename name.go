@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-var ErrTooManyNameRequests = errors.New("too many name requests within the last minute")
+var (
+	ErrTooManyNameRequests = errors.New("too many name requests within the last minute")
+	ErrOverNameApiBudget   = errors.New("name API request budget exceeded")
+)
 
 // TODO: complete implementation of this interface
 // Cacher represents a cache.
@@ -80,4 +83,67 @@ func (c *NameClient) CachedName() string {
 	// TODO: implement a LRU cache so we have the option to pull from cached names if we run out of unique names
 	// TODO: this would also need to be taken as a flag, probably through a Cache-Control header in the request
 	return ""
+}
+
+// BudgetNameReq represents a budgeted names API requester which will make no more requests than the
+// external API will tolerate.
+type BudgetNameReq struct {
+	// reqTime keeps track of when queries were made.  The size of the array should be set to the maximum
+	// number of requests that can be made within the minDiff time.
+	reqTime [7]time.Time
+	// pos is the current position in reqTime
+	pos int
+	// minDiff is the minimum amount of time between now and the current position in reqTime
+	// before we are "over budget", after which we cannot make any more requests.
+	//
+	// When creating a budget where x operations can be run in y time, this should be set as the y value.
+	minDiff float64
+	// NameChan will be populated with the results of each names API request.
+	NameChan chan Name
+}
+
+func (b *BudgetNameReq) Exec() error {
+	return nil
+	//now := time.Now()
+	//diff := now.Sub(b.reqTime[b.pos]).Seconds()
+	//if diff < b.minDiff {
+	//	return ErrOverNameApiBudget
+	//}
+	////if b.OverBudget(now) {
+	////	return ErrOverBudget
+	////}
+	//b.execFunc()
+	//b.reqTime[b.pos] = now
+	//b.incPos()
+	//return nil
+}
+
+//func (b *BudgetNameReq) OverBudget(t time.Time) bool {
+//	diff := t.Sub(b.reqTime[b.pos]).Seconds()
+//	if diff < b.minDiff {
+//		return true
+//	}
+//	return false
+//}
+
+//// ExecOften will execute the exec function as often as possible without going over budget.
+//func (b *BudgetNameReq) ExecOften() {
+//	for {
+//		if err := b.Exec(); err != nil {
+//			panic(err)
+//		}
+//		if b.OverBudget(time.Now()) {
+//
+//		}
+//	}
+//}
+
+// incPos increases the position counter, dropping back to 0 when the
+// end of the reqTime tracking array is reached.
+func (b *BudgetNameReq) incPos() {
+	if b.pos >= len(b.reqTime)-1 {
+		b.pos = 0
+	} else {
+		b.pos++
+	}
 }

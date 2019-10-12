@@ -131,3 +131,14 @@ func TestInvalidNameResponse(t *testing.T) {
 		})
 	}
 }
+
+func TestBudgetedNamesPositionNeverPanics(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	nr := BudgetNameReq{}
+	for i := 0; i < len(nr.reqTime)*2; i++ {
+		// basically just asserting that we aren't off by 1 which would eventually panic on an invalid index
+		assert.NotPanics(nr.incPos)
+	}
+}
