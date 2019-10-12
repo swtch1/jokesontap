@@ -157,7 +157,7 @@ func (c *MockNameClient) Names() ([]Name, error) {
 
 func TestBudgetedNamesExecutesNoMoreOftenThanExpected(t *testing.T) {
 	t.Parallel()
-	//assert := assert.New(t)
+	assert := assert.New(t)
 	nameClient := &MockNameClient{}
 
 	nchan := make(chan Name, 100)
@@ -176,4 +176,5 @@ func TestBudgetedNamesExecutesNoMoreOftenThanExpected(t *testing.T) {
 	time.Sleep(time.Second * 2)
 	fmt.Println(nameClient.NamesMethodCalls)
 	time.Sleep(time.Second * 2)
+	assert.True(false) // FIXME: start here
 }
