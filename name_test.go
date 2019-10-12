@@ -167,7 +167,7 @@ func TestBudgetedNamesExecutesNoMoreOftenThanExpected(t *testing.T) {
 		NameChan:   nchan,
 	}
 
-	nr.RequestOften()
+	go nr.RequestOften()
 	fmt.Println(nameClient.NamesMethodCalls)
 	time.Sleep(time.Second * 2)
 	fmt.Println(nameClient.NamesMethodCalls)

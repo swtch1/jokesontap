@@ -110,24 +110,35 @@ type BudgetNameReq struct {
 // RequestOften gets new names from the names API and pushes them to the names channel, as often as possible.
 func (b *BudgetNameReq) RequestOften() {
 	// FIXME: not working yet
-	now := time.Now()
-	diff := now.Sub(b.reqTime[b.pos])
-	for diff < b.minDiff {
-		// not under budget yet, wait and try again
-		fmt.Println("sleeping now...") // FIXME: testing
-		time.Sleep(diff + time.Second)
+	getDiff := func(now time.Time) time.Duration {
+		return now.Sub(b.reqTime[b.pos])
 	}
-	names, err := b.NameClient.Names()
-	if err != nil {
-		// we do not expect to get errors under normal operation since we budget our calls, but
-		// if the API or network is seeing issues this may happen
-		log.WithError(err).Error("unable to get names from names client")
+
+	for {
+		var now time.Time
+		now = time.Now()
+		var diff time.Duration
+		diff = getDiff(now)
+
+		for diff < b.minDiff {
+			fmt.Println("diff:", diff)
+			now = time.Now()
+			diff = getDiff(now)
+			// not under budget yet, wait and try again
+			time.Sleep(diff + time.Second)
+		}
+		names, err := b.NameClient.Names()
+		if err != nil {
+			// we do not expect to get errors under normal operation since we budget our calls, but
+			// if the API or network is seeing issues this may happen
+			log.WithError(err).Error("unable to get names from names client")
+		}
+		for _, name := range names {
+			b.NameChan <- name
+		}
+		b.reqTime[b.pos] = now
+		b.incPos()
 	}
-	for _, name := range names {
-		b.NameChan <- name
-	}
-	b.reqTime[b.pos] = now
-	b.incPos()
 }
 
 // incPos increases the position counter, dropping back to 0 when the
