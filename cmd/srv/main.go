@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/swtch1/jokesontap"
 	"github.com/swtch1/jokesontap/cli"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,9 +16,13 @@ var (
 	// this default message should be overwritten
 	buildVersion string = "unset: please file an issue"
 
-	// defaultNamesUrl is the default  // FIXME: update the docs
-	defaultNamesUrl     string = "https://uinames.com/api/?amount=500"
-	defaultBaseJokesUrl string = "http://api.icndb.com/jokes/random"
+	// defaultNamesUrl is the default API URL used to get new random names
+	defaultNamesUrl string = "https://uinames.com/api/?amount=500"
+	// defaultJokesUrl is the default API URL used to get new random jokes
+	defaultJokesUrl string = "http://api.icndb.com/jokes/random"
+	// defaultNameChanSize is the default size of the channel used to store names
+	// so that names can be eagerly retrieved from the API
+	defaultNameChanSize int64 = 5000
 )
 
 func init() {
@@ -25,36 +31,32 @@ func init() {
 }
 
 func main() {
-	//namesUrl, err := url.Parse(defaultNamesUrl)
-	//if err != nil {
-	//	log.WithError(err).Fatal("unable to parse default names URL, please submit an issue")
-	//}
-	//jokeUrl, err := url.Parse(defaultBaseJokesUrl)
-	//if err != nil {
-	//	log.WithError(err).Fatal("unable to parse default jokes URL, please submit an issue")
-	//}
-	//
+	namesUrl, err := url.Parse(defaultNamesUrl)
+	if err != nil {
+		log.WithError(err).Fatal("unable to parse default names URL, please submit an issue")
+	}
 
-	//jc := jokesontap.NewJokeClient(*jokeUrl)
-	//joke, err := jc.JokeWithCustomName("john", "smit")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(joke)
-	//nc := jokesontap.NewNameClient(defaultNamesUrl)
+	names, err := nc.Names()
+	if err != nil {
+		panic(err)
+	}
+	for _, name := range names {
+		fmt.Println(name.Name)
+	}
 
-	//names, err := nc.Names()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//for _, name := range names {
-	//	fmt.Println(name.Name)
-	//}
+	jokesUrl, err := url.Parse(defaultJokesUrl)
+	if err != nil {
+		log.Fatalf("unable to parse jokes URL '%s', please file an issue", defaultJokesUrl)
+	}
+	jokeClient := jokesontap.NewJokeClient(*jokesUrl)
 
-	//go HandleInterrupt()
-	//srv := jokesontap.Server{Port: cli.Port}
-	//log.Infof("starting server on port %d", cli.Port)
-	//log.Fatal(srv.ListenAndServe())
+	go HandleInterrupt()
+	srv := &jokesontap.Server{
+		Port:       cli.Port,
+		Names:      make(chan jokesontap.Name, defaultNameChanSize),
+		JokeClient: jokeClient,
+	}
+	log.Fatal(srv.ListenAndServe())
 }
 
 // HandleInterrupt will immediately terminate the server if it detects an interrupt signal.

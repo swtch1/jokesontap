@@ -1,5 +1,7 @@
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
+github.com/golang-collections/go-datastructures/queue
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
