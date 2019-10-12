@@ -142,3 +142,38 @@ func TestBudgetedNamesPositionNeverPanics(t *testing.T) {
 		assert.NotPanics(nr.incPos)
 	}
 }
+
+type MockNameClient struct {
+	NamesMethodCalls int
+}
+
+func (c *MockNameClient) Names() ([]Name, error) {
+	c.NamesMethodCalls++
+	return []Name{
+		{Name: "John", Surname: "Smith"},
+		{Name: "Steve", Surname: "Wilson"},
+	}, nil
+}
+
+func TestBudgetedNamesExecutesNoMoreOftenThanExpected(t *testing.T) {
+	t.Parallel()
+	//assert := assert.New(t)
+	nameClient := &MockNameClient{}
+
+	nchan := make(chan Name, 100)
+	nr := BudgetNameReq{
+		reqTime:    [7]time.Time{},
+		NameClient: nameClient,
+		NameChan:   nchan,
+	}
+
+	nr.RequestOften()
+	fmt.Println(nameClient.NamesMethodCalls)
+	time.Sleep(time.Second * 2)
+	fmt.Println(nameClient.NamesMethodCalls)
+	time.Sleep(time.Second * 2)
+	fmt.Println(nameClient.NamesMethodCalls)
+	time.Sleep(time.Second * 2)
+	fmt.Println(nameClient.NamesMethodCalls)
+	time.Sleep(time.Second * 2)
+}

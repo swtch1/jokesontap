@@ -2,7 +2,9 @@ package jokesontap
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -97,46 +99,36 @@ type BudgetNameReq struct {
 	// before we are "over budget", after which we cannot make any more requests.
 	//
 	// When creating a budget where x operations can be run in y time, this should be set as the y value.
-	minDiff float64
-	// NameChan will be populated with the results of each names API request.
+	minDiff time.Duration
+
+	// NameClient is used to make queries to the names API.
+	NameClient NameRequester
+	// NameChan is populated with the results of each names API request.
 	NameChan chan Name
 }
 
-func (b *BudgetNameReq) Exec() error {
-	return nil
-	//now := time.Now()
-	//diff := now.Sub(b.reqTime[b.pos]).Seconds()
-	//if diff < b.minDiff {
-	//	return ErrOverNameApiBudget
-	//}
-	////if b.OverBudget(now) {
-	////	return ErrOverBudget
-	////}
-	//b.execFunc()
-	//b.reqTime[b.pos] = now
-	//b.incPos()
-	//return nil
+// RequestOften gets new names from the names API and pushes them to the names channel, as often as possible.
+func (b *BudgetNameReq) RequestOften() {
+	// FIXME: not working yet
+	now := time.Now()
+	diff := now.Sub(b.reqTime[b.pos])
+	for diff < b.minDiff {
+		// not under budget yet, wait and try again
+		fmt.Println("sleeping now...") // FIXME: testing
+		time.Sleep(diff + time.Second)
+	}
+	names, err := b.NameClient.Names()
+	if err != nil {
+		// we do not expect to get errors under normal operation since we budget our calls, but
+		// if the API or network is seeing issues this may happen
+		log.WithError(err).Error("unable to get names from names client")
+	}
+	for _, name := range names {
+		b.NameChan <- name
+	}
+	b.reqTime[b.pos] = now
+	b.incPos()
 }
-
-//func (b *BudgetNameReq) OverBudget(t time.Time) bool {
-//	diff := t.Sub(b.reqTime[b.pos]).Seconds()
-//	if diff < b.minDiff {
-//		return true
-//	}
-//	return false
-//}
-
-//// ExecOften will execute the exec function as often as possible without going over budget.
-//func (b *BudgetNameReq) ExecOften() {
-//	for {
-//		if err := b.Exec(); err != nil {
-//			panic(err)
-//		}
-//		if b.OverBudget(time.Now()) {
-//
-//		}
-//	}
-//}
 
 // incPos increases the position counter, dropping back to 0 when the
 // end of the reqTime tracking array is reached.
@@ -146,4 +138,8 @@ func (b *BudgetNameReq) incPos() {
 	} else {
 		b.pos++
 	}
+}
+
+type NameRequester interface {
+	Names() ([]Name, error)
 }

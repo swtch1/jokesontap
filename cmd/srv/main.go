@@ -42,8 +42,12 @@ func main() {
 		log.WithError(err).Error("ahhhh") // FIXME: testing
 	}
 	for _, n := range names {
-		namesChan <- n
+		namesChan <- n // FIXME: testing
 	}
+	//budgetReq := jokesontap.BudgetNameReq{
+	//	NameClient: nameClient,
+	//	NameChan:   namesChan,
+	//}
 
 	jokesUrl, err := url.Parse(defaultJokesUrl)
 	if err != nil {
