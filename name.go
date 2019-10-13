@@ -32,6 +32,10 @@ type NameClient struct {
 	HttpClient *http.Client
 	//// Cache holds names that we may want to use if the external API is unavailable.
 	//Cache Cacher
+
+	// TODO: this can be removed when proper metrics are implemented
+	// nameReqRate is the per-minute rate at which the name client is being requested.
+	nameReqRate float64 // FIXME: testing
 }
 
 // NewNameClient creates a NameClient with default values where baseUrl is the API URL to query.
@@ -60,6 +64,7 @@ func (c *NameClient) Names() ([]Name, error) {
 		return []Name{}, errors.Wrapf(err, "unable to create new http request with URL '%s'", c.ApiUrl.String())
 	}
 	req.Header.Set("Accept", "application/json")
+	log.Tracef("getting names from name server")
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return []Name{}, errors.Wrapf(err, "unable to get new name from '%s'", c.ApiUrl.String())
@@ -89,13 +94,13 @@ func (c *NameClient) Names() ([]Name, error) {
 // BudgetNameReq is a budgeted names API requester which will make no more requests than the
 // external API will tolerate.
 type BudgetNameReq struct {
-	// reqTime keeps track of when queries were made.  The size of the array should be set to the maximum
+	// requests keeps track of when requests were made.  The size of the array should be set to the maximum
 	// number of requests (the budget) that can be made within the MinDiff time.
 	//
 	// When creating a budget where x operations can be run in y time, the size of this array should
 	// be set as the x value.
-	reqTime [7]time.Time
-	// pos is the current position in reqTime, a tracker for getting the oldest names API request.
+	requests [6]time.Time
+	// pos is the current position in requests, a tracker for getting the oldest names API request.
 	pos int
 	// MinDiff is the minimum amount of time between now and the oldest names API request allowed before
 	// we are "over budget", after which we cannot make any more requests.
@@ -103,7 +108,7 @@ type BudgetNameReq struct {
 	// When creating a budget where x operations can be run in y time, this should be set as the y value.
 	MinDiff time.Duration
 
-	// NameClient is used to make queries to the names API.
+	// NameClient is used to request new names.
 	NameClient NameRequester
 	// NameChan is populated with the results of each names API request.
 	NameChan chan Name
@@ -140,7 +145,6 @@ func (b *BudgetNameReq) RequestOften() {
 
 // pushNamesFromAPI pushes a new batch of names from into the name channel.
 func (b *BudgetNameReq) pushNamesFromAPI() {
-	log.Tracef("getting names from name API at %s", time.Now().Format(logTimestampFmt))
 	names, err := b.NameClient.Names()
 	if err != nil {
 		switch errors.Cause(err).(type) {
@@ -160,18 +164,18 @@ func (b *BudgetNameReq) pushNamesFromAPI() {
 }
 
 func (b *BudgetNameReq) oldestRequest() time.Time {
-	return b.reqTime[b.pos]
+	return b.Reqs[b.pos]
 }
 
 func (b *BudgetNameReq) updateRequestTime(t time.Time) {
-	b.reqTime[b.pos] = t
+	b.Reqs[b.pos] = t
 	b.incPos()
 }
 
 // incPos increases the position counter, dropping back to 0 when the
-// end of the reqTime tracking array is reached.
+// end of the requests tracking array is reached.
 func (b *BudgetNameReq) incPos() {
-	if b.pos >= len(b.reqTime)-1 {
+	if b.pos >= len(b.Reqs)-1 {
 		b.pos = 0
 	} else {
 		b.pos++

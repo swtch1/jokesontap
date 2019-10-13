@@ -27,12 +27,6 @@ var (
 )
 
 func main() {
-	// TODO: only allow GET methods on the server
-	// TODO: set appropriate headers in the server response
-	// TODO: solve this error:
-	// ERRO[0118]/mnt/c/important/code/jokesontap/name.go:136 github.com/swtch1/jokesontap.(*BudgetNameReq).RequestOften() unable to get names from names client
-	//        error="unable to unmarshal names API response body: invalid character '<' looking for beginning of value"
-
 	cli.Init(buildVersion)
 	jokesontap.InitLogger(os.Stderr, cli.LogLevel, cli.LogFormat, cli.PrettyPrintJsonLogs)
 
@@ -43,8 +37,13 @@ func main() {
 	nameClient := jokesontap.NewNameClient(*namesUrl)
 	namesChan := make(chan jokesontap.Name, defaultNameChanSize)
 
+	// NOTE: the size of the budget array has been shortened to 6 rather than the API specified 7 requests per minute as
+	// real world testing showed that rate limit errors were still being seen at 7 requests per every 65 seconds.
+	// TODO: re-evaluate the names API at regular intervals to determine the optimal request rate
 	budgetReq := jokesontap.BudgetNameReq{
-		MinDiff:    time.Second * 59,
+		// allow buffer to avoid getting rate limited from names API
+		// ref: http://www.icndb.com/api/
+		MinDiff:    time.Second * 61,
 		NameClient: nameClient,
 		NameChan:   namesChan,
 	}

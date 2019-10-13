@@ -137,7 +137,7 @@ func TestBudgetedNamesPositionNeverPanics(t *testing.T) {
 	assert := assert.New(t)
 
 	nr := BudgetNameReq{}
-	for i := 0; i < len(nr.reqTime)*2; i++ {
+	for i := 0; i < len(nr.requests)*2; i++ {
 		// basically just asserting that we aren't off by 1 which would eventually panic on an invalid index
 		assert.NotPanics(nr.incPos)
 	}
@@ -166,7 +166,7 @@ func TestBudgetedNamesExecutesAsOftenAsExpected(t *testing.T) {
 
 	nChan := make(chan Name, 100)
 	nr := BudgetNameReq{
-		reqTime:    [budget]time.Time{},
+		requests:   [budget]time.Time{},
 		MinDiff:    minDiff,
 		NameClient: nc,
 		NameChan:   nChan,

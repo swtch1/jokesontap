@@ -30,6 +30,7 @@ func (s *Server) ListenAndServe() error {
 	}
 
 	mux := http.NewServeMux()
+	// TODO: ensure only the GET verb can be called on this endpoint
 	mux.HandleFunc("/", s.GetCustomJoke)
 	httpSrv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", s.Port),
