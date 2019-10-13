@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var (
@@ -25,33 +26,27 @@ var (
 	defaultNameChanSize int64 = 5000
 )
 
-func init() {
+func main() {
 	cli.Init(buildVersion)
 	jokesontap.SetLogger(os.Stderr, cli.LogLevel, cli.LogFormat, cli.PrettyPrintJsonLogs)
-}
 
-func main() {
-	namesChan := make(chan jokesontap.Name, defaultNameChanSize)
 	namesUrl, err := url.Parse(defaultNamesUrl)
 	if err != nil {
 		log.WithError(err).Fatal("unable to parse default names URL, please submit an issue")
 	}
 	nameClient := jokesontap.NewNameClient(*namesUrl)
-	names, err := nameClient.Names()
-	if err != nil {
-		log.WithError(err).Error("ahhhh") // FIXME: testing
+	namesChan := make(chan jokesontap.Name, defaultNameChanSize)
+
+	budgetReq := jokesontap.BudgetNameReq{
+		MinDiff:    time.Second * 59,
+		NameClient: nameClient,
+		NameChan:   namesChan,
 	}
-	for _, n := range names {
-		namesChan <- n // FIXME: testing
-	}
-	//budgetReq := jokesontap.BudgetNameReq{
-	//	NameClient: nameClient,
-	//	NameChan:   namesChan,
-	//}
+	go budgetReq.RequestOften()
 
 	jokesUrl, err := url.Parse(defaultJokesUrl)
 	if err != nil {
-		log.Fatalf("unable to parse jokes URL '%s', please file an issue", defaultJokesUrl)
+		log.WithError(err).Fatalf("unable to parse jokes URL '%s', please file an issue", defaultJokesUrl)
 	}
 	jokeClient := jokesontap.NewJokeClient(*jokesUrl)
 

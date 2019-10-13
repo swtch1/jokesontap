@@ -167,7 +167,7 @@ func TestBudgetedNamesExecutesAsOftenAsExpected(t *testing.T) {
 	nChan := make(chan Name, 100)
 	nr := BudgetNameReq{
 		reqTime:    [budget]time.Time{},
-		minDiff:    minDiff,
+		MinDiff:    minDiff,
 		NameClient: nc,
 		NameChan:   nChan,
 	}

@@ -84,18 +84,18 @@ func (c *NameClient) CachedName() string {
 // external API will tolerate.
 type BudgetNameReq struct {
 	// reqTime keeps track of when queries were made.  The size of the array should be set to the maximum
-	// number of requests (the budget) that can be made within the minDiff time.
+	// number of requests (the budget) that can be made within the MinDiff time.
 	//
 	// When creating a budget where x operations can be run in y time, the size of this array should
 	// be set as the x value.
 	reqTime [7]time.Time
 	// pos is the current position in reqTime, a tracker for getting the oldest names API request.
 	pos int
-	// minDiff is the minimum amount of time between now and the oldest names API request allowed before
+	// MinDiff is the minimum amount of time between now and the oldest names API request allowed before
 	// we are "over budget", after which we cannot make any more requests.
 	//
 	// When creating a budget where x operations can be run in y time, this should be set as the y value.
-	minDiff time.Duration
+	MinDiff time.Duration
 
 	// NameClient is used to make queries to the names API.
 	NameClient NameRequester
@@ -104,7 +104,7 @@ type BudgetNameReq struct {
 }
 
 // RequestOften gets new names from the names API and pushes them to the names channel, as often as possible.
-// If the timestamp of the oldest call is more than minDiff then we wait until we expect to successfully
+// If the timestamp of the oldest call is more than MinDiff then we wait until we expect to successfully
 // make the next call.
 func (b *BudgetNameReq) RequestOften() {
 	var now time.Time
@@ -116,7 +116,7 @@ func (b *BudgetNameReq) RequestOften() {
 		diff = now.Sub(oldestRequest)
 
 		// wait until the time between now and the oldest request is less than allowed
-		for diff < b.minDiff {
+		for diff < b.MinDiff {
 			now = time.Now()
 			diff = now.Sub(oldestRequest)
 		}
