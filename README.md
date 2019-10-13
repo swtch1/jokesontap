@@ -2,9 +2,9 @@
 Have you ever wanted to query Chuck Norris-like jokes as fast as possible?  Of course you have.  Get them while
 they're hot.
 
-This application server retrieves fresh jokes from the [Internet Chuck Norris Database](http://www.icndb.com/), but
-adds a flare of personality by switching out the name with a random one from [uinames.com](https://uinames.com/).
-Why should Chuck get all the credit?
+This application server retrieves fresh, specifically nerdy, jokes from the
+[Internet Chuck Norris Database](http://www.icndb.com/), but adds a flare of personality by switching out the
+name with a random one from [uinames.com](https://uinames.com/). Why should Chuck get all the credit?
 
 ## Building
 `build.sh` will test and build the server binary.
@@ -35,7 +35,7 @@ The server has a single root endpoint which will return a new Chuck Norris-like 
 Assuming the server is running on default port 5000, query the server and get a joke.
 ```bash
 $ curl http://localhost:5000
-John Smith's OSI network model has only one layer - Physical.
+Bruce Banner's OSI network model has only one layer - Physical.
 ```
 
 ## Known Limitations
@@ -46,3 +46,7 @@ may not be able to serve a new joke for lack of a random name.
 ## TODO
 - [ ] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
 - [ ] Implement Prometheus metrics.
+- [ ] As of writing, the [Internet Chuck Norris Database](http://www.icndb.com/) only contains 574 jokes total.  This
+is such a small database it would be more efficient to simply download the entire data set on a daily basis and serve
+the jokes from memory without calling out to the external service.  This functionality needs to be confirmed with the
+specific application requirements before implementation.
