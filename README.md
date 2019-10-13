@@ -3,8 +3,8 @@ Have you ever wanted to query Chuck Norris-like jokes as fast as possible?  Of c
 they're hot.
 
 This application server retrieves fresh jokes from the [Internet Chuck Norris Database](http://www.icndb.com/), but
-adds a flare of personality by switching out the name from [uinames.com](https://uinames.com/).  Why should Chuck
-get all the credit?
+adds a flare of personality by switching out the name with a random one from [uinames.com](https://uinames.com/).
+Why should Chuck get all the credit?
 
 ## Building
 `build.sh` will test and build the server binary.
@@ -46,3 +46,4 @@ may not be able to serve a new joke for lack of a random name.
 
 ## TODO
 [ ] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
+[ ] Implement Prometheus metrics.
