@@ -45,5 +45,5 @@ may not be able to serve a new joke for lack of a random name.
 
 
 ## TODO
-[x] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
-[x] Implement Prometheus metrics.
+- [ ] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
+- [ ] Implement Prometheus metrics.
