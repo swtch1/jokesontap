@@ -2,6 +2,7 @@ package jokesontap
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -9,6 +10,8 @@ import (
 	"net/url"
 	"time"
 )
+
+var ErrUnmarshalingNamesAPI = errors.New("unable to unmarshal names API response body, possible rate limiting from name service")
 
 // TODO: complete implementation of this interface
 //// Cacher represents a cache.
@@ -69,7 +72,7 @@ func (c *NameClient) Names() ([]Name, error) {
 		return []Name{}, errors.Wrapf(err, "unable to read names API response body")
 	}
 	if err := json.Unmarshal(body, &names); err != nil {
-		return []Name{}, errors.Wrap(err, "unable to unmarshal names API response body")
+		return []Name{}, errors.Wrap(err, fmt.Sprintf("%s", ErrUnmarshalingNamesAPI)) // FIXME: testing
 	}
 	return names, nil
 }
@@ -81,6 +84,8 @@ func (c *NameClient) Names() ([]Name, error) {
 //	return ""
 //}
 
+// TODO: this implementation is fairly specific to the problem it solves.  We could break this out to be a more general
+// TODO: budget executor, but probably not necessary until we have to use this pattern in more tha one place.
 // BudgetNameReq is a budgeted names API requester which will make no more requests than the
 // external API will tolerate.
 type BudgetNameReq struct {
@@ -112,35 +117,55 @@ func (b *BudgetNameReq) RequestOften() {
 	var diff time.Duration
 
 	for {
-		oldestRequest := b.reqTime[b.pos]
 		now = time.Now()
-		diff = now.Sub(oldestRequest)
+		diff = now.Sub(b.oldestRequest())
 
-		// wait until the time between now and the oldest request is less than allowed
+		// wait until the time between now and the oldest request is within set bounds
 		for diff < b.MinDiff {
 			now = time.Now()
-			diff = now.Sub(oldestRequest)
+			diff = now.Sub(b.oldestRequest())
 		}
 
-		// don't make an outbound request if the names channel is already full
 		nameChanFull := len(b.NameChan) == cap(b.NameChan)
 		if nameChanFull {
 			log.Trace("names channel is full, skipping attempt to get new names")
+			time.Sleep(time.Second * 1)
 			continue
 		}
 
-		names, err := b.NameClient.Names()
-		if err != nil {
-			// we do not expect to get errors under normal operation since we budget our calls, but
-			// if the API or network is seeing issues this may happen
-			log.WithError(err).Error("unable to get names from names client")
-		}
-		for _, name := range names {
-			b.NameChan <- name
-		}
-		b.reqTime[b.pos] = now
-		b.incPos()
+		b.pushNamesFromAPI()
+		b.updateRequestTime(now)
 	}
+}
+
+// pushNamesFromAPI pushes a new batch of names from into the name channel.
+func (b *BudgetNameReq) pushNamesFromAPI() {
+	log.Tracef("getting names from name API at %s", time.Now().Format(logTimestampFmt))
+	names, err := b.NameClient.Names()
+	if err != nil {
+		switch errors.Cause(err).(type) {
+		case *json.SyntaxError:
+			// TODO: this could be converted into a full circuit breaker pattern instead of this basic limit
+			// TODO: something like exponential back-off could be more appropriate as we do not want to continue
+			// TODO: to get limited and pay the 1 minute penalty
+			// receiving a json SyntaxError could mean we are not able to unmarshal the response and are likely
+			// being rate limited as the names API returns HTML when throttling
+			time.Sleep(time.Second * 5)
+		}
+		log.WithError(err).Error("unable to get names from names client")
+	}
+	for _, name := range names {
+		b.NameChan <- name
+	}
+}
+
+func (b *BudgetNameReq) oldestRequest() time.Time {
+	return b.reqTime[b.pos]
+}
+
+func (b *BudgetNameReq) updateRequestTime(t time.Time) {
+	b.reqTime[b.pos] = t
+	b.incPos()
 }
 
 // incPos increases the position counter, dropping back to 0 when the

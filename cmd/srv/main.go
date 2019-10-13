@@ -28,7 +28,6 @@ var (
 
 func main() {
 	// TODO: only allow GET methods on the server
-	// TODO: translate quotes like '&quot;' to real chars.
 	// TODO: set appropriate headers in the server response
 	// TODO: solve this error:
 	// ERRO[0118]/mnt/c/important/code/jokesontap/name.go:136 github.com/swtch1/jokesontap.(*BudgetNameReq).RequestOften() unable to get names from names client
