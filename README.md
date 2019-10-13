@@ -43,7 +43,6 @@ As of writing [uinames.com](https://uinames.com/), which is used to generate the
 names per minute.  This is partially mitigated by eagerly querying and storing names in memory, but if pushed the server
 may not be able to serve a new joke for lack of a random name.
 
-
 ## TODO
 - [ ] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
 - [ ] Implement Prometheus metrics.
