@@ -164,18 +164,18 @@ func (b *BudgetNameReq) pushNamesFromAPI() {
 }
 
 func (b *BudgetNameReq) oldestRequest() time.Time {
-	return b.Reqs[b.pos]
+	return b.requests[b.pos]
 }
 
 func (b *BudgetNameReq) updateRequestTime(t time.Time) {
-	b.Reqs[b.pos] = t
+	b.requests[b.pos] = t
 	b.incPos()
 }
 
 // incPos increases the position counter, dropping back to 0 when the
 // end of the requests tracking array is reached.
 func (b *BudgetNameReq) incPos() {
-	if b.pos >= len(b.Reqs)-1 {
+	if b.pos >= len(b.requests)-1 {
 		b.pos = 0
 	} else {
 		b.pos++
