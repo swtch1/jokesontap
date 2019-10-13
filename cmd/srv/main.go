@@ -28,9 +28,7 @@ var (
 
 func main() {
 	cli.Init(buildVersion)
-	jokesontap.SetLogger(os.Stderr, cli.LogLevel, cli.LogFormat, cli.PrettyPrintJsonLogs)
-
-	// TODO: start the Prometheus server here.  beginnings of the server in metric package.
+	jokesontap.InitLogger(os.Stderr, cli.LogLevel, cli.LogFormat, cli.PrettyPrintJsonLogs)
 
 	namesUrl, err := url.Parse(defaultNamesUrl)
 	if err != nil {

@@ -11,23 +11,24 @@ import (
 )
 
 // TODO: complete implementation of this interface
-// Cacher represents a cache.
-type Cacher interface {
-	Add(interface{}, interface{}) bool
-}
+//// Cacher represents a cache.
+//type Cacher interface {
+//	Add(interface{}, interface{}) bool
+//}
 
 type Name struct {
 	Name    string `json:"name"`
 	Surname string `json:"surname"`
 }
 
+// NameClient can request random names from a names server.
 type NameClient struct {
 	// ApiUrl is the full URL of the names server from which we can request new names.
 	ApiUrl url.URL
 	// HttpClient is a http client which can be reused across multiple requests.
 	HttpClient *http.Client
-	// Cache holds names that we may want to use if the external API is unavailable.
-	Cache Cacher
+	//// Cache holds names that we may want to use if the external API is unavailable.
+	//Cache Cacher
 }
 
 // NewNameClient creates a NameClient with default values where baseUrl is the API URL to query.
@@ -73,12 +74,12 @@ func (c *NameClient) Names() ([]Name, error) {
 	return names, nil
 }
 
-// CachedName gets a previously used name from the cache.
-func (c *NameClient) CachedName() string {
-	// TODO: implement a LRU cache so we have the option to pull from cached names if we run out of unique names
-	// TODO: this would also need to be taken as a flag, probably through a Cache-Control header in the request
-	return ""
-}
+//// CachedName gets a previously used name from the cache.
+//func (c *NameClient) CachedName() string {
+//	// TODO: implement a LRU cache so we have the option to pull from cached names if we run out of unique names
+//	// TODO: this would also need to be taken as a flag, probably through a Cache-Control header in the request
+//	return ""
+//}
 
 // BudgetNameReq is a budgeted names API requester which will make no more requests than the
 // external API will tolerate.

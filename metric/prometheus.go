@@ -22,6 +22,7 @@ type Prometheus struct {
 // Run starts the Prometheus metrics server. Set metrics with the PrometheusMetrics.
 func (p Prometheus) Run() {
 	p.registerAllMetrics()
+
 	path := "/metrics"
 	log.Infof("starting prometheus at path '%s' on port '%d'", path, p.Port)
 	if !p.test {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 
 var ErrUnsuccessfulJokeQuery = errors.New("general error getting new joke")
 
+// Joke maps to the Internet Chuck Norris database API response.
 type Joke struct {
 	Type  string `json:"type"`
 	Value struct {
@@ -20,13 +22,16 @@ type Joke struct {
 	} `json:"value"`
 }
 
+// Successful returns true when a populated Joke response was successful.
 func (j *Joke) Successful() bool {
+	// ref: http://www.icndb.com/api/
 	if j.Type == "success" {
 		return true
 	}
 	return false
 }
 
+// JokeClient can request jokes from a joke server.
 type JokeClient struct {
 	// ApiUrl is the base URL of the jokes API to query
 	ApiUrl url.URL
@@ -51,12 +56,15 @@ func NewJokeClient(baseUrl url.URL) *JokeClient {
 	}
 }
 
+// Joke returns a new joke.
 func (c *JokeClient) Joke() (string, error) {
+	log.Trace("getting default joke")
 	return c.jokeFromUrl(c.ApiUrl.String())
 }
 
 // JokeWithCustomName gets a new joke using the first and last name passed in.
 func (c *JokeClient) JokeWithCustomName(fName, lName string) (string, error) {
+	log.Trace("getting joke with custom name")
 	return c.jokeFromUrl(addParams(c.ApiUrl, fName, lName, "nerdy"))
 }
 

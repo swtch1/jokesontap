@@ -9,9 +9,12 @@ import (
 
 var logTimestampFmt = time.RFC3339
 
-func SetLogger(w io.Writer, level string, format string, prettyJson bool) {
+// InitLogger sets values on the global logger for use everywhere else in the application.
+func InitLogger(w io.Writer, level string, format string, prettyJson bool) {
 	var lvl log.Level
 	switch strings.ToLower(level) {
+	case "trace":
+		lvl = log.TraceLevel
 	case "debug":
 		lvl = log.DebugLevel
 	case "info":
