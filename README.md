@@ -40,4 +40,9 @@ John Smith's OSI network model has only one layer - Physical.
 
 ## Known Limitations
 As of writing [uinames.com](https://uinames.com/), which is used to generate the random names, has a rate limit of 3,500
-names per minute.  This limits the  TODO: add details here based on the implementation.
+names per minute.  This is partially mitigated by eagerly querying and storing names in memory, but if pushed the server
+may not be able to serve a new joke for lack of a random name.
+
+
+## TODO
+[ ] Implement caching so that when given the Cache-Control header the server will reuse a previous name.
