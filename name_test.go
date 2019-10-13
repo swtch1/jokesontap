@@ -161,7 +161,7 @@ func TestBudgetedNamesExecutesAsOftenAsExpected(t *testing.T) {
 	nc := &MockNameClient{}
 
 	// type takes into account array len so this will have to change if the implementation changes
-	const budget = 7
+	const budget = 6
 	const minDiff = time.Millisecond * 500
 
 	nChan := make(chan Name, 100)
