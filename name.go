@@ -2,7 +2,6 @@ package jokesontap
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -87,16 +86,19 @@ func (c *NameClient) CachedName() string {
 	return ""
 }
 
-// BudgetNameReq represents a budgeted names API requester which will make no more requests than the
+// BudgetNameReq is a budgeted names API requester which will make no more requests than the
 // external API will tolerate.
 type BudgetNameReq struct {
 	// reqTime keeps track of when queries were made.  The size of the array should be set to the maximum
-	// number of requests that can be made within the minDiff time.
+	// number of requests (the budget) that can be made within the minDiff time.
+	//
+	// When creating a budget where x operations can be run in y time, the size of this array should
+	// be set as the x value.
 	reqTime [7]time.Time
-	// pos is the current position in reqTime
+	// pos is the current position in reqTime, a tracker for getting the oldest names API request.
 	pos int
-	// minDiff is the minimum amount of time between now and the current position in reqTime
-	// before we are "over budget", after which we cannot make any more requests.
+	// minDiff is the minimum amount of time between now and the oldest names API request allowed before
+	// we are "over budget", after which we cannot make any more requests.
 	//
 	// When creating a budget where x operations can be run in y time, this should be set as the y value.
 	minDiff time.Duration
@@ -108,25 +110,23 @@ type BudgetNameReq struct {
 }
 
 // RequestOften gets new names from the names API and pushes them to the names channel, as often as possible.
+// If the timestamp of the oldest call is more than minDiff then we wait until we expect to successfully
+// make the next call.
 func (b *BudgetNameReq) RequestOften() {
-	// FIXME: not working yet
-	getDiff := func(now time.Time) time.Duration {
-		return now.Sub(b.reqTime[b.pos])
-	}
+	var now time.Time
+	var diff time.Duration
 
 	for {
-		var now time.Time
+		oldestRequest := b.reqTime[b.pos]
 		now = time.Now()
-		var diff time.Duration
-		diff = getDiff(now)
+		diff = now.Sub(oldestRequest)
 
+		// wait until the time between now and the oldest request is less than allowed
 		for diff < b.minDiff {
-			fmt.Println("diff:", diff)
 			now = time.Now()
-			diff = getDiff(now)
-			// not under budget yet, wait and try again
-			time.Sleep(diff + time.Second)
+			diff = now.Sub(oldestRequest)
 		}
+
 		names, err := b.NameClient.Names()
 		if err != nil {
 			// we do not expect to get errors under normal operation since we budget our calls, but

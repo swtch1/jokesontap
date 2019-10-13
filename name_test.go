@@ -155,26 +155,28 @@ func (c *MockNameClient) Names() ([]Name, error) {
 	}, nil
 }
 
-func TestBudgetedNamesExecutesNoMoreOftenThanExpected(t *testing.T) {
+func TestBudgetedNamesExecutesAsOftenAsExpected(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
-	nameClient := &MockNameClient{}
+	nc := &MockNameClient{}
 
-	nchan := make(chan Name, 100)
+	// type takes into account array len so this will have to change if the implementation changes
+	const budget = 7
+	const minDiff = time.Millisecond * 500
+
+	nChan := make(chan Name, 100)
 	nr := BudgetNameReq{
-		reqTime:    [7]time.Time{},
-		NameClient: nameClient,
-		NameChan:   nchan,
+		reqTime:    [budget]time.Time{},
+		minDiff:    minDiff,
+		NameClient: nc,
+		NameChan:   nChan,
 	}
 
 	go nr.RequestOften()
-	fmt.Println(nameClient.NamesMethodCalls)
-	time.Sleep(time.Second * 2)
-	fmt.Println(nameClient.NamesMethodCalls)
-	time.Sleep(time.Second * 2)
-	fmt.Println(nameClient.NamesMethodCalls)
-	time.Sleep(time.Second * 2)
-	fmt.Println(nameClient.NamesMethodCalls)
-	time.Sleep(time.Second * 2)
-	assert.True(false) // FIXME: start here
+	// give the program ample time to loop and call the name client
+	time.Sleep(time.Millisecond * 250)
+	assert.Equal(budget, nc.NamesMethodCalls)
+	// ensure we pass another cycle
+	time.Sleep(minDiff)
+	assert.Equal(budget*2, nc.NamesMethodCalls)
 }
