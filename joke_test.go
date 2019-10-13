@@ -14,20 +14,21 @@ func TestEncodingUrlParameters(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		url    string
-		fName  string
-		lName  string
-		expUrl string
+		url      string
+		fName    string
+		lName    string
+		category string
+		expUrl   string
 	}{
-		{"http://x.y", "jason", "bourne", "http://x.y?firstName=jason&lastName=bourne"},
-		{"http://y.z", "Barry", "Allen", "http://y.z?firstName=Barry&lastName=Allen"},
+		{"http://x.y", "jason", "bourne", "nerdy", "http://x.y?firstName=jason&lastName=bourne&limitTo=%5Bnerdy%5D"},
+		{"http://y.z", "Barry", "Allen", "nerdy", "http://y.z?firstName=Barry&lastName=Allen&limitTo=%5Bnerdy%5D"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.fName+" "+tt.lName, func(t *testing.T) {
 			u, err := url.Parse(tt.url)
 			assert.Nil(err)
-			assert.Equal(tt.expUrl, addNameParams(*u, tt.fName, tt.lName))
+			assert.Equal(tt.expUrl, addParams(*u, tt.fName, tt.lName, "nerdy"))
 		})
 	}
 }

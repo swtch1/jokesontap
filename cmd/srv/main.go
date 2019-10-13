@@ -51,6 +51,7 @@ func main() {
 	jokeClient := jokesontap.NewJokeClient(*jokesUrl)
 
 	go HandleInterrupt()
+	log.Infof("starting server on port %d", cli.Port)
 	srv := &jokesontap.Server{
 		Port:       cli.Port,
 		Names:      namesChan,

@@ -3,14 +3,10 @@ package jokesontap
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
-
-//// NameQueue is a queue where names will be retrieved from.  The server expects for this queue  // FIXME: testing
-//// to be populated ahead of time.
-//// WARNING: There is no locking mechanism around this queue so this must be a thread-safe implementation.
-//NameQueue Queue
 
 var (
 	ErrNamesChanUninitialized = errors.New("the server's names channel is uninitialized, please submit an issue")
@@ -50,20 +46,15 @@ func (s *Server) GetCustomJoke(w http.ResponseWriter, req *http.Request) {
 	case name := <-s.Names:
 		joke, err := s.JokeClient.JokeWithCustomName(name.Name, name.Surname)
 		if err != nil {
+			log.WithError(err).Error("failed to get joke with custom name")
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, err, "\n")
 		}
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, joke, "\n")
 	case <-time.After(time.Second * 5):
+		log.WithError(ErrNoNamesAvailable).Error("timeout getting name")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, ErrNoNamesAvailable, "\n")
 	}
 }
-
-//type Queue interface {
-//	Get(int64) ([]interface{}, error)
-//	Put(...interface{}) error
-//	Len() int64
-//	Empty() bool
-//}

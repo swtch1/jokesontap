@@ -2,6 +2,7 @@ package jokesontap
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -56,7 +57,7 @@ func (c *JokeClient) Joke() (string, error) {
 
 // JokeWithCustomName gets a new joke using the first and last name passed in.
 func (c *JokeClient) JokeWithCustomName(fName, lName string) (string, error) {
-	return c.jokeFromUrl(addNameParams(c.ApiUrl, fName, lName))
+	return c.jokeFromUrl(addParams(c.ApiUrl, fName, lName, "nerdy"))
 }
 
 func (c JokeClient) jokeFromUrl(apiUrl string) (string, error) {
@@ -85,11 +86,12 @@ func (c JokeClient) jokeFromUrl(apiUrl string) (string, error) {
 	return joke.Value.Joke, nil
 }
 
-// addNameParams will add the first and last names as parameters to url.
-func addNameParams(baseUrl url.URL, fName, lName string) string {
+// addParams will add the first name, last name, and category as parameters to url.
+func addParams(baseUrl url.URL, fName, lName, category string) string {
 	params := url.Values{}
-	params.Add("firstName", fName)
-	params.Add("lastName", lName)
+	params.Set("firstName", fName)
+	params.Set("lastName", lName)
+	params.Set("limitTo", fmt.Sprintf("[%s]", category))
 	baseUrl.RawQuery = params.Encode()
 	return baseUrl.String()
 }

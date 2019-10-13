@@ -121,6 +121,13 @@ func (b *BudgetNameReq) RequestOften() {
 			diff = now.Sub(oldestRequest)
 		}
 
+		// don't make an outbound request if the names channel is already full
+		nameChanFull := len(b.NameChan) == cap(b.NameChan)
+		if nameChanFull {
+			log.Trace("names channel is full, skipping attempt to get new names")
+			continue
+		}
+
 		names, err := b.NameClient.Names()
 		if err != nil {
 			// we do not expect to get errors under normal operation since we budget our calls, but
