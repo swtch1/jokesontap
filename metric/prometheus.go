@@ -17,6 +17,8 @@ type Prometheus struct {
 	test bool
 }
 
+// TODO: this doesn't work, at least not in basic testing.  We need to get a working Prometheus server, write some
+// TODO: tests and add more metrics throughout the application.
 // Run starts the Prometheus metrics server. Set metrics with the PrometheusMetrics.
 func (p Prometheus) Run() {
 	p.registerAllMetrics()
@@ -25,7 +27,7 @@ func (p Prometheus) Run() {
 	if !p.test {
 		mux := http.NewServeMux()
 		mux.Handle(path, promhttp.Handler())
-		go http.ListenAndServe(fmt.Sprintf(":%d", p.Port), mux)
+		go http.ListenAndServe(fmt.Sprintf(":%d", p.Port), promhttp.Handler())
 	}
 }
 

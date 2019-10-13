@@ -3,7 +3,9 @@ package jokesontap
 import (
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"github.com/swtch1/jokesontap/metric"
 	"net/http"
 	"time"
 )
@@ -42,6 +44,7 @@ func (s *Server) ListenAndServe() error {
 }
 
 func (s *Server) GetCustomJoke(w http.ResponseWriter, req *http.Request) {
+	metric.MHttpRequestTotal.With(prometheus.Labels{"type": "custom-joke"}).Inc()
 	select {
 	case name := <-s.Names:
 		joke, err := s.JokeClient.JokeWithCustomName(name.Name, name.Surname)
