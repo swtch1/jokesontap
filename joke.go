@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -91,7 +92,7 @@ func (c JokeClient) jokeFromUrl(apiUrl string) (string, error) {
 	if !joke.Successful() {
 		return "", ErrUnsuccessfulJokeQuery
 	}
-	return joke.Value.Joke, nil
+	return html.UnescapeString(joke.Value.Joke), nil
 }
 
 // addParams will add the first name, last name, and category as parameters to url.
