@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-var (
-	ErrTooManyNameRequests = errors.New("too many name requests within the last minute")
-	ErrOverNameApiBudget   = errors.New("name API request budget exceeded")
-)
-
 // TODO: complete implementation of this interface
 // Cacher represents a cache.
 type Cacher interface {
@@ -38,7 +33,7 @@ type NameClient struct {
 // NewNameClient creates a NameClient with default values where baseUrl is the API URL to query.
 func NewNameClient(baseUrl url.URL) *NameClient {
 	// TODO: the client values here _may_ be too detailed for the command line, but could be taken in thorough a more
-	// TODO: detailed config file or env vars
+	// TODO: detailed config file or env vars.  just would be better to be able to dynamically configure.
 	return &NameClient{
 		ApiUrl: baseUrl,
 		HttpClient: &http.Client{
@@ -56,7 +51,6 @@ func NewNameClient(baseUrl url.URL) *NameClient {
 // of the name API and will short circuit if too many requests are made.  If Names is called more often
 // than the API will allow an ErrTooManyNameRequests error will be returned.
 func (c *NameClient) Names() ([]Name, error) {
-	// TODO: implemente requests budget
 	req, err := http.NewRequest("GET", c.ApiUrl.String(), nil)
 	if err != nil {
 		return []Name{}, errors.Wrapf(err, "unable to create new http request with URL '%s'", c.ApiUrl.String())
