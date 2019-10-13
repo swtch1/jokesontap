@@ -34,9 +34,9 @@ func InitLogger(w io.Writer, level string, format string, prettyJson bool) {
 	case "json":
 		formatter = &log.JSONFormatter{TimestampFormat: logTimestampFmt, PrettyPrint: prettyJson}
 	case "text":
-		formatter = &log.TextFormatter{TimestampFormat: logTimestampFmt}
+		formatter = &log.TextFormatter{TimestampFormat: logTimestampFmt, FullTimestamp: true}
 	default:
-		formatter = &log.TextFormatter{TimestampFormat: logTimestampFmt}
+		formatter = &log.TextFormatter{TimestampFormat: logTimestampFmt, FullTimestamp: true}
 		log.Fatalf("unexpected format '%s'", format)
 
 	}
