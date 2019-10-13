@@ -23,7 +23,7 @@ var (
 	defaultJokesUrl string = "http://api.icndb.com/jokes/random"
 	// defaultNameChanSize is the default size of the channel used to store names
 	// so that names can be eagerly retrieved from the API
-	defaultNameChanSize int64 = 5000
+	defaultNameChanSize int64 = 10000
 )
 
 func main() {
