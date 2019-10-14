@@ -14,6 +14,14 @@ cd jokesontap
 ls ./bin
 ```
 
+## Features
+- fast, concurrent web server
+- ahead-of-time random name cache partially mitigates backpressure from names API and avoids API rate limiting
+- detailed logging
+- customized application settings through command line parameters
+- automatic build and testing through build script
+- well tested code, of course
+
 ## Usage
 
 ### Starting the Server
@@ -45,8 +53,10 @@ if pushed the server may not be able to serve a new joke for lack of a random na
 
 ## Benchmarks
 A benchmark was run with the [performance test scrip](/perf/perf_test.sh), which runs a fast-as-possible benchmark
-for 60 seconds, after the names cache (10,000 entries) was allowed to fill.  The results are as follows:
+for 30 seconds, after the names cache (10,000 entries) was allowed to fill.  The results are as follows:
 ```
+$ timeout 30 siege -b -c 100 http://localhost:5000/
+~~~
 Transactions:                  13000 hits
 Availability:                  97.01 %
 Elapsed time:                  59.99 secs
