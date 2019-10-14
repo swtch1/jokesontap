@@ -2,7 +2,6 @@ package jokesontap
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -11,7 +10,11 @@ import (
 	"time"
 )
 
-var ErrUnmarshalingNamesAPI = errors.New("unable to unmarshal names API response body, possible rate limiting from name service")
+var (
+	// ErrNon200NameApiResponse occurs when we receive a status code that is not 200 or 429.
+	ErrNon200NameApiResponse   = errors.New("general error in names API response")
+	ErrNamesApiTooManyRequests = errors.New("too many requests to names API")
+)
 
 // TODO: complete implementation of this interface
 //// Cacher represents a cache.
@@ -70,6 +73,14 @@ func (c *NameClient) Names() ([]Name, error) {
 		return []Name{}, errors.Wrapf(err, "unable to get new name from '%s'", c.ApiUrl.String())
 	}
 	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK:
+		// do nothing
+	case http.StatusTooManyRequests:
+		return []Name{}, ErrNamesApiTooManyRequests
+	default:
+		return []Name{}, errors.Wrapf(ErrNon200NameApiResponse, "status code %d", resp.StatusCode)
+	}
 
 	var names []Name
 	body, err := ioutil.ReadAll(resp.Body)
@@ -77,7 +88,7 @@ func (c *NameClient) Names() ([]Name, error) {
 		return []Name{}, errors.Wrapf(err, "unable to read names API response body")
 	}
 	if err := json.Unmarshal(body, &names); err != nil {
-		return []Name{}, errors.Wrap(err, fmt.Sprintf("%s", ErrUnmarshalingNamesAPI)) // FIXME: testing
+		return []Name{}, errors.Wrap(err, "unable to unmarshal names API response body, possible rate limiting from name service")
 	}
 	return names, nil
 }
@@ -147,13 +158,8 @@ func (b *BudgetNameReq) RequestOften() {
 func (b *BudgetNameReq) pushNamesFromAPI() {
 	names, err := b.NameClient.Names()
 	if err != nil {
-		switch errors.Cause(err).(type) {
-		case *json.SyntaxError:
-			// TODO: this could be converted into a full circuit breaker pattern instead of this basic limit
-			// TODO: something like exponential back-off could be more appropriate as we do not want to continue
-			// TODO: to get limited and pay the 1 minute penalty
-			// receiving a json SyntaxError could mean we are not able to unmarshal the response and are likely
-			// being rate limited as the names API returns HTML when throttling
+		if errors.Cause(err) == ErrNamesApiTooManyRequests {
+			log.Debug("probable rate limiting in progress, back off querying names API")
 			time.Sleep(time.Second * 5)
 		}
 		log.WithError(err).Error("unable to get names from names client")

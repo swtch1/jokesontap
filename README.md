@@ -52,10 +52,12 @@ a certain number of requests.  This is partially mitigated by eagerly querying a
 if pushed the server may not be able to serve a new joke for lack of a random name.
 
 ## Benchmarks
-A benchmark was run with the [performance test scrip](/perf/perf_test.sh), which runs a fast-as-possible benchmark
-for 30 seconds, after the names cache (10,000 entries) was allowed to fill.  The results are as follows:
+Benchmarking the server for 30 seconds, after the names cache (10,000 entries) was allowed to fill.  Disclaimer:
+benchmark results were run with the server and benchmarking client on the same laptop.
+
+The results are as follows:
 ```
-$ timeout 30 siege -b -c 100 http://localhost:5000/
+$ timeout 60 siege -b -c 100 http://localhost:5000/
 ~~~
 Transactions:                  13000 hits
 Availability:                  97.01 %
@@ -71,8 +73,8 @@ Longest transaction:            5.30
 Shortest transaction:           0.15
 ```
 
-Ultimately this service is limited by the name server which we depend on to generate random names.  The name server
-throttles our traffic and thus we cannot generate names fast enough.  This could be remedied by some of the
+Ultimately this service's current bottleneck is the name server which we depend on to generate random names.  The
+name server throttles our traffic and thus we cannot generate names fast enough.  This could be remedied by some of the
 enhancements in [TODO](#todo).
 
 ## TODO
