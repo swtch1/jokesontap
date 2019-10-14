@@ -18,6 +18,7 @@ var (
 		},
 	}
 
+	Help                bool
 	Version             bool
 	Port                int32
 	LogLevel            string
@@ -27,6 +28,7 @@ var (
 
 // Init performs setup for the application CLI commands and flags, setting application version as provided.
 func Init(version string) {
+	cmd.PersistentFlags().BoolVarP(&Help, "help", "h", false, "Display this help and exit.")
 	cmd.PersistentFlags().BoolVar(&Version, "version", false, "Print the application version and exit.")
 	cmd.PersistentFlags().Int32VarP(&Port, "port", "p", 5000, "Port which the server will listen on.")
 	cmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "l", "info", "Log level should be one of trace, debug, info, warn, error, fatal.")
@@ -36,6 +38,10 @@ func Init(version string) {
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	if Help {
+		os.Exit(0)
 	}
 
 	// handle the version manually since the built in version options for Cobra do not exit after printing
