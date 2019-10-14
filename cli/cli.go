@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var appName string = "jokesontap"
+var appName = "jokesontap"
 
 var (
 	// cmd is the root of our CLI

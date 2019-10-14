@@ -73,6 +73,7 @@ func (c *NameClient) Names() ([]Name, error) {
 		return []Name{}, errors.Wrapf(err, "unable to get new name from '%s'", c.ApiUrl.String())
 	}
 	defer resp.Body.Close()
+
 	switch resp.StatusCode {
 	case http.StatusOK:
 		// do nothing
@@ -95,13 +96,13 @@ func (c *NameClient) Names() ([]Name, error) {
 
 //// CachedName gets a previously used name from the cache.
 //func (c *NameClient) CachedName() string {
-//	// TODO: implement a LRU cache so we have the option to pull from cached names if we run out of unique names
+//	// TODO: implement a cache so we have the option to pull from cached names if we run out of unique names
 //	// TODO: this would also need to be taken as a flag, probably through a Cache-Control header in the request
 //	return ""
 //}
 
 // TODO: this implementation is fairly specific to the problem it solves.  We could break this out to be a more general
-// TODO: budget executor, but probably not necessary until we have to use this pattern in more tha one place.
+// TODO: budget executor, but probably not necessary until we have to use this pattern in more than one place.
 // BudgetNameReq is a budgeted names API requester which will make no more requests than the
 // external API will tolerate.
 type BudgetNameReq struct {
@@ -126,7 +127,7 @@ type BudgetNameReq struct {
 }
 
 // RequestOften gets new names from the names API and pushes them to the names channel, as often as possible.
-// If the timestamp of the oldest call is more than MinDiff then we wait until we expect to successfully
+// If the timestamp of the oldest call is more than MinDiff then we wait until we are with the budget to
 // make the next call.
 func (b *BudgetNameReq) RequestOften() {
 	var now time.Time

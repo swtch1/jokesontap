@@ -15,15 +15,15 @@ import (
 var (
 	// buildVersion is the application version and should be populated at build time by build ldflags
 	// this default message should be overwritten
-	buildVersion string = "unset: please file an issue"
+	buildVersion = "unset: please file an issue"
 
 	// defaultNamesUrl is the default API URL used to get new random names
-	defaultNamesUrl string = "https://uinames.com/api/?amount=500"
+	defaultNamesUrl = "https://uinames.com/api/?amount=500"
 	// defaultJokesUrl is the default API URL used to get new random jokes
-	defaultJokesUrl string = "http://api.icndb.com/jokes/random"
+	defaultJokesUrl = "http://api.icndb.com/jokes/random"
 	// defaultNameChanSize is the default size of the channel used to store names
 	// so that names can be eagerly retrieved from the API
-	defaultNameChanSize int64 = 100000
+	defaultNameChanSize = 100000
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 	// real world testing showed that rate limit errors were still being seen at 7 requests per every 65 seconds.
 	// TODO: re-evaluate the names API at regular intervals to determine the optimal request rate
 	budgetReq := jokesontap.BudgetNameReq{
-		// allow buffer to avoid getting rate limited from names API
+		// allow small buffer to avoid getting rate limited from names API
 		// ref: http://www.icndb.com/api/
 		MinDiff:    time.Second * 61,
 		NameClient: nameClient,
