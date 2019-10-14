@@ -19,6 +19,7 @@ func TestStartingServerWithNilNamesChanErrors(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
+	// basically just testing the happy path
 	t.Parallel()
 	assert := assert.New(t)
 
